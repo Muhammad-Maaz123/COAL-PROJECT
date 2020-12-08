@@ -1,7 +1,4 @@
-; Author: Abuzar Ghafari 
-; Program Name: exp9 
- ; Program Description: TYPE Operator example 
- ; Date 
+
  
  INCLUDE Irvine32.inc 
  
