@@ -162,8 +162,9 @@ check_win PROC USES EAX ECX EDX ESI
 	mov esi, offset state
 	winloop:
 		mov al, [esi]
-		cmp al, 11
+		.if (al == 11)
 			JE win
+		.endif
 		inc si
 	loop winloop
 	RET
@@ -184,8 +185,9 @@ check_gameover PROC USES EAX EBX ECX EDX ESI
 	mov ecx, lengthof state
 	countzero:
 		mov al, [esi]
-		cmp	al, 0
+		.if(al == 0)
 			JZ CGreturn
+		.endif
 		inc esi
 	loop countzero
 
@@ -196,12 +198,13 @@ check_gameover PROC USES EAX EBX ECX EDX ESI
 		mov al, [esi+4]
 		mov bh, [esi+8]
 		mov bl, [esi+12]
-		cmp ah, al
+		.if(ah == al)
 			JE CGreturn
-		cmp al, bh
+		.elseif(al == bh)
 			JE CGreturn
-		cmp bh, bl
+		.elseif (bh == bl)
 			JE CGreturn
+		.endif
 		inc si
 	loop check_column
 
@@ -212,12 +215,13 @@ check_gameover PROC USES EAX EBX ECX EDX ESI
 		mov al, [esi+1]
 		mov bh, [esi+2]
 		mov bl, [esi+3]
-		cmp ah, al
+		.if(ah == al)
 			JE CGreturn
-		cmp al, bh
+		.elseif(al == bh)
 			JE CGreturn
-		cmp bh, bl
+		.elseif(bh == bl)
 			JE CGreturn
+		.endif
 		add esi, 4
 	loop check_row
 
@@ -241,16 +245,15 @@ move PROC
 		JNZ move1
 	mov bh, bl
 	mov bl, 0
-
+	
 	move1:
 	cmp al, 0
 		JNZ move2
 	mov al, bh
 	mov bh, bl
 	mov bl, 0
-
 	move2:
-	cmp ah, 0
+	cmp ah,0
 		JNZ move3
 	mov ah, al
 	mov al, bh
@@ -258,29 +261,36 @@ move PROC
 	mov bl, 0
 
 	move3:
+	;.if(dl == 0)
 	cmp dl, 0
 		JNE movereturn
-
+	;.elseif(ah == 0)
 	cmp ah, 0
 		JZ move4
+	;.elseif(ah == al)
 	cmp ah, al
 		JNE move4
 	inc ah
 	mov al, 0
 
 	move4:
+	;.if(al == 0)
 	cmp al, 0
 		JZ move5
+	;.elseif(al == bh)
 	cmp al, bh
 		JNE move5
 	inc al
 	mov bh, 0
 
 	move5:
+	;.if(bh == 0)
 	cmp bh, 0
 		JZ move6
+    ;.elseif(bh == bl)
 	cmp bh, bl
 		JNE move6
+	;.endif
 	inc bh
 	mov bl, 0
 	move6:
@@ -300,16 +310,20 @@ operup PROC USES ECX ESI EAX EDX
 		mov bh, [esi+8]
 		mov bl, [esi+12]
 		call move
-		cmp ah, [esi]
+		;cmp ah, [esi] 
+		.if(ah == [esi])
 			JNE updiff
-		cmp al, [esi+4]
+		;cmp al, [esi+4]
+		.elseif(al == [esi+4])
 			JNE updiff
-		cmp bh, [esi+8]
+		;cmp bh, [esi+8]
+		.elseif(bh == [esi+8])
 			JNE updiff
-		cmp bl, [esi+12]
+		;cmp bl,[esi+12]
+		.elseif(bl == [esi+12])
 			JNE updiff
-		
 		JMP upcontinue
+		.endif
 		updiff:
 			inc dh
 
@@ -321,9 +335,9 @@ operup PROC USES ECX ESI EAX EDX
 		inc si
 	loop uploop
 	
-	cmp dh, 0
+	.if(dh == 0)
 		JE upNoChange
-	
+	.endif
 	Call Generate
 	Call Clrscr
 	Call draw
@@ -345,16 +359,17 @@ operdown PROC USES ECX ESI EAX EDX
 		mov bh, [esi+4]
 		mov bl, [esi]
 		call move
-		cmp ah, [esi+12]
+		.if(ah == [esi+12])
 			JNE downdiff
-		cmp al, [esi+8]
+		.elseif(al == [esi+8])
 			JNE downdiff
-		cmp bh, [esi+4]
+		.elseif(bh == [esi+4])
 			JNE downdiff
-		cmp bl, [esi]
+		.elseif(bl == [esi])
 			JNE downdiff
-		
-		JMP downcontinue
+		.else
+	     	JMP downcontinue
+		.endif
 		downdiff:
 			inc dh
 
@@ -366,9 +381,9 @@ operdown PROC USES ECX ESI EAX EDX
 		inc si
 	loop downloop
 
-	cmp dh, 0
+    .if(dh == 0)
 		JE downNoChange
-
+	.endif
 	Call Generate
 	call Clrscr
 	call draw
@@ -388,16 +403,17 @@ operleft PROC USES ECX ESI EAX EDX
 		mov bh, [esi+2]
 		mov bl, [esi+3]
 		call move
-		cmp ah, [esi]
+		.if(ah == [esi])
 			JNE leftdiff
-		cmp al, [esi+1]
+		.elseif(al == [esi+1])
 			JNE leftdiff
-		cmp bh, [esi+2]
+		.elseif(bh == [esi+2])
 			JNE leftdiff
-		cmp bl, [esi+3]
+		.elseif(bl == [esi+3])
 			JNE leftdiff
-		
-		JMP leftcontinue
+		.else
+			JMP leftcontinue
+		.endif
 		leftdiff:
 			inc dh
 
@@ -409,9 +425,9 @@ operleft PROC USES ECX ESI EAX EDX
 		add si, 4
 	loop leftloop
 
-	cmp dh, 0
+	.if(dh == 0)
 		JE leftNoChange
-	
+	.endif
 	Call Generate
 	call Clrscr
 	call draw
@@ -431,16 +447,17 @@ operright PROC USES ECX ESI EAX EDX
 		mov bh, [esi+1]
 		mov bl, [esi]
 		call move
-		cmp ah, [esi+3]
+		.if(ah == [esi+3])
 			JNE rightdiff
-		cmp al, [esi+2]
+		.elseif(al == [esi+2])
 			JNE rightdiff
-		cmp bh, [esi+1]
+		.elseif(bh == [esi+1])
 			JNE rightdiff
-		cmp bl, [esi]
+		.elseif(bl == [esi])
 			JNE rightdiff
-		
-		JMP rightcontinue
+		.else
+			JMP rightcontinue
+		.endif
 		rightdiff:
 			inc dh
 
@@ -452,9 +469,9 @@ operright PROC USES ECX ESI EAX EDX
 		add si, 4
 	loop rightloop
 
-	cmp dh, 0
+	.if(dh == 0)
 		JE rightNoChange
-
+	.endif
 	Call Generate
 	call Clrscr
 	call draw
@@ -471,8 +488,9 @@ draw PROC USES ESI EDI EAX EBX ECX EDX
 
 	L1 :
 		mov eax, [ebx]
-		cmp al, 0
+		.if(al == 0)
 			JZ continue
+		.endif
 		call choosecolor
 
 		mov dh, [esi]
@@ -502,7 +520,7 @@ draw PROC USES ESI EDI EAX EBX ECX EDX
 		
 		inc ah
 		mov dx, ax
-		call GotoXY
+		;call GotoXY
 		;MOV EDX, OFFSET block
 		;CaLL WriteString
 
@@ -512,8 +530,8 @@ draw PROC USES ESI EDI EAX EBX ECX EDX
 		inc si
 		inc di
 	loop L1
-	mov dh, 25
-	mov dl, 47
+	mov dh, 00
+	mov dl, 10
 	Call GotoXY
 	RET
 draw ENDP
@@ -526,38 +544,49 @@ turnbackcolor ENDP
 
 choosecolor PROC
 	cmp al, 1
+	;.if(al == 1)
 	cmp al, 1
         JNE color4
+	;.endif
 	mov eax, white + 9*16
     JMP setcolor
     color4:
-    cmp al, 2
+    ;.if(al == 2)
+	cmp al, 2
         JNE color8
+	;.endif
 	mov eax, white + 1*16
     JMP setcolor
-    color8:
-    cmp al, 3
+	color8:
+    ;.if(al == 3)
+	cmp al, 3
         JNE color16
+	;.endif
 	mov eax, white + 6*16
     JMP setcolor
-    color16:
-    cmp al, 4
+  color16:
+    ;.if(al == 4)
+	cmp al, 4
         JNE color32
+	;.endif
 	mov eax, white + 5*16
     JMP setcolor
-    color32:
-    cmp al, 5
+	color32:
+    ;.if(al == 5)
+	cmp al, 5
         JNE color64
+	;.endif
 	mov eax, white + 12*16
     JMP setcolor
-    color64:
-    cmp al, 6
-        JG color128
+	color64:
+    ;.if(al == 6)
+	cmp al, 6
+		JG color128
+	;.endif
 	mov eax, white + 4*16
     JMP setcolor
-    color128:
+	color128:
 	mov eax, black + 14*16
-
 	setcolor:
 	call settextcolor
     RET
@@ -566,60 +595,82 @@ choosecolor ENDP
 choosenumber PROC USES EAX EBX
     mov al, [ebx]
 
-    cmp al, 1
+    ;.if(al == 1)
+	cmp al, 1
         JNE choose4
-    mov edx, offset num2
-    RET
+	;.endif
+    mov edx, offset num2    
+	RET
     choose4:
-    cmp al, 2
+    ;.if(al == 2)
+	cmp al, 2
         JNE choose8
+	;.endif
     mov edx, offset num4
-    RET
+	RET
     choose8:
-    cmp al, 3
+   ;.if(al == 3)
+   cmp al, 3
         JNE choose16
+	;.endif
     mov edx, offset num8
-    RET
+	RET
     choose16:
-    cmp al, 4
+    ;.if(al == 4)
+	cmp al, 4
         JNE choose32
+	;.endif
     mov edx, offset num16
-    RET
+	RET
     choose32:
-    cmp al, 5
+    ;.if(al == 5)
+	cmp al, 5
         JNE choose64
+	;.endif
     mov edx, offset num32
-    RET
+	RET
     choose64:
-    cmp al, 6
+    ;.if(al == 6)
+	cmp al, 6
         JNE choose128
+	;.endif
     mov edx, offset num64
-    RET
+	RET
     choose128:
-    cmp al, 7
+    ;.if(al == 7)
+	cmp al, 7
         JNE choose256
+	;.endif
     mov edx, offset num128
-    RET
+	RET
     choose256:
-    cmp al, 8
+    ;.if(al == 8)
+	cmp al, 8
         JNE choose512
+	;.endif
     mov edx, offset num256
-    RET
+	RET
     choose512:
-    cmp al, 9
+    ;.if(al == 9)
+	cmp al, 9
         JNE choose1024
+	;.endif
     mov edx, offset num512
-    RET
+	RET
     choose1024:
-    cmp al, 10
+    ;.if(al == 10)
+	cmp al, 10
         JNE choose2048
+	;.endif
     mov edx, offset num1024
-    RET
+	RET
     choose2048:
-    cmp al, 11
+    ;.if(al == 11)
+	cmp al, 11
         JNE ChooseNumberReturn
+	;.endif
     mov edx, offset num2048
-    ChooseNumberReturn:
+	ChooseNumberReturn:
     RET
 choosenumber ENDP
 
@@ -631,9 +682,10 @@ Generate PROC USES EAX EBX ECX
 	mov ebx, offset state
 	add ebx, ecx
 	mov al, [ebx]
+	;.if(al == 0)
 	cmp al, 0
 		JNE redo
-	
+	;.endif
 	mov esi, offset X
 	add esi, ecx
 	mov edi, offset Y
@@ -641,9 +693,10 @@ Generate PROC USES EAX EBX ECX
 
 	mov eax, 4
 	call RandomRange
+	;.if(al == 3)
 	cmp al, 3
 		JE put4
-
+	;.endif
 	mov al, 1
 	mov [ebx], al
 	RET
