@@ -4,25 +4,41 @@ INCLUDE Irvine32.inc
 
 startscreen   BYTE '  ',0ah,0dh
 BYTE ' ',0ah,0dh
-BYTE ' +============================================+',0ah,0dh
-BYTE ' ||                                          ||',0ah,0dh
-BYTE ' ||           !!!!!!!!           +++         ||',0ah,0dh
-BYTE ' ||          !! !!!!!!!         +++++        ||',0ah,0dh
-BYTE ' ||          !!!!!!!!!!      +++++++++++     ||',0ah,0dh
-BYTE ' ||          !!!!!!!!!!        +     +       ||',0ah,0dh
-BYTE ' ||          !!!!!                           ||',0ah,0dh
-BYTE ' ||          !!!!!!!!                        ||',0ah,0dh
-BYTE ' || !       !!!!!!            +-----+        ||',0ah,0dh
-BYTE ' || !!    !!!!!!!!!!          |     |        ||',0ah,0dh
-BYTE ' ||  !!!  !!!!!!!!! !         |2048 |        ||',0ah,0dh
-BYTE ' ||   !!!!!!!!!!!!            |     |        ||',0ah,0dh
-BYTE ' ||    !!!!!!!!!!!            +-----+        ||',0ah,0dh
-BYTE ' ||     !!!!!!!!!                            ||',0ah,0dh
-BYTE ' ||      !!!!!!!                             ||',0ah,0dh
-BYTE ' ||       !!! !!                             ||',0ah,0dh
-BYTE ' ||       !    !                             ||',0ah,0dh
-BYTE ' ||       !!   !!                            ||',0ah,0dh
-BYTE ' +============================================+',0ah,0dh, 0
+BYTE '                   2048 GAME                   ',0ah,0dh 
+BYTE '               Press ENTER to Start                    ',0ah,0dh, 0
+
+board  BYTE '  ',0ah,0dh
+BYTE ' ',0ah,0dh
+BYTE ' ---------------------------------------------',0ah,0dh
+BYTE ' |          |           |          |          |',0ah,0dh
+BYTE ' |          |           |          |          |',0ah,0dh
+BYTE ' |          |           |          |          |',0ah,0dh
+BYTE ' |          |           |          |          |',0ah,0dh
+BYTE ' |          |           |          |          |',0ah,0dh
+BYTE ' |          |           |          |          |',0ah,0dh
+BYTE ' ---------------------------------------------',0ah,0dh
+BYTE ' |          |           |          |          |',0ah,0dh
+BYTE ' |          |           |          |          |',0ah,0dh
+BYTE ' |          |           |          |          |',0ah,0dh
+BYTE ' |          |           |          |          |',0ah,0dh
+BYTE ' |          |           |          |          |',0ah,0dh
+BYTE ' |          |           |          |          |',0ah,0dh
+BYTE ' ---------------------------------------------',0ah,0dh
+BYTE ' |          |           |          |          |',0ah,0dh
+BYTE ' |          |           |          |          |',0ah,0dh
+BYTE ' |          |           |          |          |',0ah,0dh
+BYTE ' |          |           |          |          |',0ah,0dh
+BYTE ' |          |           |          |          |',0ah,0dh
+BYTE ' |          |           |          |          |',0ah,0dh
+BYTE ' ---------------------------------------------',0ah,0dh
+BYTE ' |          |           |          |          |',0ah,0dh
+BYTE ' |          |           |          |          |',0ah,0dh
+BYTE ' |          |           |          |          |',0ah,0dh
+BYTE ' |          |           |          |          |',0ah,0dh
+BYTE ' |          |           |          |          |',0ah,0dh
+BYTE ' |          |           |          |          |',0ah,0dh
+BYTE ' ---------------------------------------------',0ah,0dh,0
+
 
 
 winstring BYTE ' ', 0ah, 0dh
@@ -71,6 +87,7 @@ BYTE ' +============================================+', 0ah, 0dh, 0
 
 
 Z BYTE ? , 0 
+score BYTE "Score:  ",0
 
 ;block  BYTE "     ", 0
 block2 BYTE "       ", 0
@@ -109,16 +126,23 @@ main PROC
     MOV EDX, 0
     CALL Clrscr
 
+
 	Call Generate
 	Call Generate
 	call draw
 
 
+
 	in_the_game:
+	    
+	    mov edx, offset score
+		call writestring
 
      	inc z
 		mov edx, offset z
-		call writeDec 
+		call writeDec
+		call crlf
+		 
 
 		mov ebx, 0
 		CALL Readchar
@@ -481,6 +505,11 @@ operright PROC USES ECX ESI EAX EDX
 operright ENDP
 
 draw PROC USES ESI EDI EAX EBX ECX EDX
+	
+	MOV edx , OFFSET board
+	call writestring 
+
+	
 	mov esi, offset x
 	mov edi, offset y
 	mov ebx, offset state
@@ -531,7 +560,7 @@ draw PROC USES ESI EDI EAX EBX ECX EDX
 		inc di
 	loop L1
 	mov dh, 00
-	mov dl, 10
+	mov dl, 60
 	Call GotoXY
 	RET
 draw ENDP
