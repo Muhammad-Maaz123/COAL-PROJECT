@@ -5,7 +5,7 @@ INCLUDE Irvine32.inc
 startscreen   BYTE '  ',0ah,0dh
 BYTE ' ',0ah,0dh
 BYTE '                   2048 GAME                   ',0ah,0dh 
-BYTE '               Press ENTER to Start                    ',0ah,0dh, 0
+BYTE '               Press Enter to Start                    ',0ah,0dh, 0
 
 board  BYTE '  ',0ah,0dh
 BYTE ' ',0ah,0dh
@@ -92,49 +92,52 @@ score BYTE "Score:  ",0
 ;block  BYTE "     ", 0
 block2 BYTE "       ", 0
 
-num2    BYTE "   2   ", 0
-num4    BYTE "   4   ", 0
-num8    BYTE "   8   ", 0
-num16   BYTE "  16   ", 0
-num32   BYTE "  32   ", 0
-num64   BYTE "  64   ", 0
-num128  BYTE "  128  ", 0
-num256  BYTE "  256  ", 0
-num512  BYTE "  512  ", 0
-num1024 BYTE " 1024  ", 0
-num2048 BYTE " 2048  ", 0
+; output display blocks representing 
+; real num values
+data2    BYTE "   2   ", 0
+data4    BYTE "   4   ", 0
+data8    BYTE "   8   ", 0
+data16   BYTE "  16   ", 0
+data32   BYTE "  32   ", 0
+data64   BYTE "  64   ", 0
+data128  BYTE "  128  ", 0
+data256  BYTE "  256  ", 0
+data512  BYTE "  512  ", 0
+data1024 BYTE " 1024  ", 0
+data2048 BYTE " 2048  ", 0
 
 
 
-x BYTE 4 DUP(2), 4 DUP(9), 4 DUP(16), 4 DUP(23)
-y BYTE 4 DUP(4,15,26,37)
+x_axis BYTE 4 DUP(2), 4 DUP(9), 4 DUP(16), 4 DUP(23)
+y_axis BYTE 4 DUP(4,15,26,37)
 
-state BYTE 16 DUP(0)
+state BYTE 16 DUP(0) ; ambiguity  :'( ;
 
 
 .CODE
 main PROC
 
-    CALL Randomize
-    CALL Clrscr
+	;generating random number
+    ;CALL Randomize
+    CALL Clrscr 
     MOV EDX, OFFSET startscreen
     CALL WriteString
 
     CALL ReadChar
 
-    MOV EAX, 0
+    MOV eax, 0
     MOV EDX, 0
     CALL Clrscr
 
+	mov ecx,3
+	generateThrice:
+	Call genRandom
+	loop generateThrice
 
-	Call Generate
-	Call Generate
-	call draw
+	call displayFunction
 
-
-
-	in_the_game:
-	    
+	gameProcess:
+	; abayy salayy ye kia chuss hai xD
 	    mov edx, offset score
 		call writestring
 
@@ -148,106 +151,106 @@ main PROC
 		CALL Readchar
 
 	   .if (ah == 48h)
-			JE  up
+			JE  moveUp
 		.elseif ( ah == 50h)
-			JE down
+			JE moveDown
 		.elseif( ah == 4Bh)
-			JE left
+			JE moveLeft
 		.elseif(ah == 4Dh)
-			JE right
+			JE moveRight
 		.endif
 		
-		up :
-			call operUP
+		; jump output labels given below
+		moveUp :
+			call arrowUp
 			jmp L2continue
-		down :
-			call operdown
+		moveDown :
+			call arrowDown
 			jmp L2continue
-		left :
-			call operleft
+		moveLeft :
+			call arrowLeft
 			jmp L2continue
-		right :
-			call operright
+		moveRight :
+			call arrowRight
 			jmp L2continue
 		
 		L2continue :
 		;call look
 
-		call check_win
-		call check_gameover
-	JMP in_the_game
+		call VICTORY
+		call LOSS
+	JMP gameProcess
 	EXIT
 
 main ENDP
 
-check_win PROC USES EAX ECX EDX ESI 
+VICTORY PROC USES EAX ECX EDX ESI 
 	mov eax, 0
 	mov ecx, lengthof state
 	mov esi, offset state
-	winloop:
+	victoryLabel:
 		mov al, [esi]
 		.if (al == 11)
-			JE win
+			JE victoryConfirmLabel
 		.endif
 		inc si
-	loop winloop
+	loop victoryLabel
 	RET
 
 
-	win:
+	victoryConfirmLabel:
 	mov eax, 1000
 	call delay
 	call clrscr
 	mov edx, offset winstring
 	call writestring
 	EXIT
-
-check_win ENDP
+VICTORY ENDP
 	
-check_gameover PROC USES EAX EBX ECX EDX ESI
+LOSS PROC USES EAX EBX ECX EDX ESI
 	mov esi, offset state
 	mov ecx, lengthof state
 	countzero:
 		mov al, [esi]
 		.if(al == 0)
-			JZ CGreturn
+			JZ endLoss
 		.endif
 		inc esi
 	loop countzero
 
 	mov ecx, 4
 	mov esi, offset state
-	check_column:
+	coloumnCheck:
 		mov ah, [esi]
 		mov al, [esi+4]
 		mov bh, [esi+8]
 		mov bl, [esi+12]
 		.if(ah == al)
-			JE CGreturn
+			JE endLoss
 		.elseif(al == bh)
-			JE CGreturn
+			JE endLoss
 		.elseif (bh == bl)
-			JE CGreturn
+			JE endLoss
 		.endif
 		inc si
-	loop check_column
+	loop coloumnCheck
 
 	mov ecx, 4
 	mov esi, offset state
-	check_row:
+	rowCheck:
 		mov ah, [esi]
 		mov al, [esi+1]
 		mov bh, [esi+2]
 		mov bl, [esi+3]
 		.if(ah == al)
-			JE CGreturn
+			JE endLoss
 		.elseif(al == bh)
-			JE CGreturn
+			JE endLoss
 		.elseif(bh == bl)
-			JE CGreturn
+			JE endLoss
 		.endif
 		add esi, 4
-	loop check_row
+	loop rowCheck
 
 	mov eax, 1000
 	call delay
@@ -255,14 +258,11 @@ check_gameover PROC USES EAX EBX ECX EDX ESI
 	mov edx, offset gameoverstring
 	call writestring
 	EXIT
-
-
-
-	CGreturn :
+	endLoss :
 	RET
-check_gameover ENDP
+LOSS ENDP
 
-move PROC
+movementFunction PROC
 	mov dl, 0
 	move0:
 	cmp bh, 0
@@ -322,18 +322,18 @@ move PROC
 	JMP move0
 	movereturn :
 	RET
-MOVE ENDP
+movementFunction ENDP
 
-operup PROC USES ECX ESI EAX EDX
+arrowUp PROC USES ECX ESI EAX EDX
 	mov esi, offset state
 	mov ecx, 4
 	mov edx, 0
-	uploop:
+	uplabel:
 		mov ah, [esi]
 		mov al, [esi+4]
 		mov bh, [esi+8]
 		mov bl, [esi+12]
-		call move
+		call movementFunction
 		;cmp ah, [esi] 
 		.if(ah == [esi])
 			JNE updiff
@@ -357,22 +357,21 @@ operup PROC USES ECX ESI EAX EDX
 		mov [esi+8],  bh
 		mov [esi+12], bl
 		inc si
-	loop uploop
+	loop uplabel
 	
 	.if(dh == 0)
 		JE upNoChange
 	.endif
-	Call Generate
+
+	Call genRandom
 	Call Clrscr
-	Call draw
-	
+	Call displayFunction
 
 	upNoChange :
 	RET
+arrowUp ENDP
 
-operup ENDP
-
-operdown PROC USES ECX ESI EAX EDX
+arrowDown PROC USES ECX ESI EAX EDX
 	mov esi, offset state
 	mov ecx, 4
 	mov edx, 0
@@ -382,7 +381,7 @@ operdown PROC USES ECX ESI EAX EDX
 		mov al, [esi+8]
 		mov bh, [esi+4]
 		mov bl, [esi]
-		call move
+		call movementFunction
 		.if(ah == [esi+12])
 			JNE downdiff
 		.elseif(al == [esi+8])
@@ -408,15 +407,15 @@ operdown PROC USES ECX ESI EAX EDX
     .if(dh == 0)
 		JE downNoChange
 	.endif
-	Call Generate
+	Call genRandom
 	call Clrscr
-	call draw
+	call displayFunction
 
 	downNoChange :
 	RET
-operdown ENDP
+arrowDown ENDP
 
-operleft PROC USES ECX ESI EAX EDX
+arrowLeft PROC USES ECX ESI EAX EDX
 	mov esi, offset state
 	mov ecx, 4
 	mov edx, 0
@@ -426,7 +425,7 @@ operleft PROC USES ECX ESI EAX EDX
 		mov al, [esi+1]
 		mov bh, [esi+2]
 		mov bl, [esi+3]
-		call move
+		call movementFunction
 		.if(ah == [esi])
 			JNE leftdiff
 		.elseif(al == [esi+1])
@@ -452,15 +451,15 @@ operleft PROC USES ECX ESI EAX EDX
 	.if(dh == 0)
 		JE leftNoChange
 	.endif
-	Call Generate
+	Call genRandom
 	call Clrscr
-	call draw
+	call displayFunction
 
 	leftNoChange :
 	RET
-operleft ENDP
+arrowLeft ENDP
 
-operright PROC USES ECX ESI EAX EDX
+arrowRight PROC USES ECX ESI EAX EDX
 	mov esi, offset state
 	mov ecx, 4
 	mov edx, 0
@@ -470,7 +469,7 @@ operright PROC USES ECX ESI EAX EDX
 		mov al, [esi+2]
 		mov bh, [esi+1]
 		mov bl, [esi]
-		call move
+		call movementFunction
 		.if(ah == [esi+3])
 			JNE rightdiff
 		.elseif(al == [esi+2])
@@ -496,31 +495,31 @@ operright PROC USES ECX ESI EAX EDX
 	.if(dh == 0)
 		JE rightNoChange
 	.endif
-	Call Generate
+	Call genRandom
 	call Clrscr
-	call draw
+	call displayFunction
 
 	rightNoChange :
 	RET
-operright ENDP
+arrowRight ENDP
 
-draw PROC USES ESI EDI EAX EBX ECX EDX
+displayFunction PROC USES ESI EDI EAX EBX ECX EDX
 	
 	MOV edx , OFFSET board
 	call writestring 
 
 	
-	mov esi, offset x
-	mov edi, offset y
+	mov esi, offset x_axis
+	mov edi, offset y_axis
 	mov ebx, offset state
-	mov ecx, lengthof x
+	mov ecx, lengthof x_axis
 
 	L1 :
 		mov eax, [ebx]
 		.if(al == 0)
 			JZ continue
 		.endif
-		call choosecolor
+		call selectColor
 
 		mov dh, [esi]
 		mov dl, [edi]
@@ -538,7 +537,7 @@ draw PROC USES ESI EDI EAX EBX ECX EDX
 		inc ah
 		mov dx, ax
 		call GotoXY
-		Call choosenumber
+		Call selectDigit
 		CaLL WriteString
 
 		inc ah
@@ -553,7 +552,7 @@ draw PROC USES ESI EDI EAX EBX ECX EDX
 		;MOV EDX, OFFSET block
 		;CaLL WriteString
 
-		call turnbackcolor
+		call assignColor
 		continue :
 		inc bx
 		inc si
@@ -563,15 +562,15 @@ draw PROC USES ESI EDI EAX EBX ECX EDX
 	mov dl, 60
 	Call GotoXY
 	RET
-draw ENDP
+displayFunction ENDP
 
-turnbackcolor PROC USES EAX
+assignColor PROC USES EAX
 	mov eax, white + black*16
 	call settextcolor
 	RET
-turnbackcolor ENDP
+assignColor ENDP
 
-choosecolor PROC
+selectColor PROC
 	cmp al, 1
 	;.if(al == 1)
 	cmp al, 1
@@ -619,92 +618,93 @@ choosecolor PROC
 	setcolor:
 	call settextcolor
     RET
-choosecolor ENDP
+selectColor ENDP
 
-choosenumber PROC USES EAX EBX
+selectDigit PROC USES EAX EBX
     mov al, [ebx]
 
     ;.if(al == 1)
 	cmp al, 1
-        JNE choose4
+        JNE select4
 	;.endif
-    mov edx, offset num2    
+    mov edx, offset data2    
 	RET
-    choose4:
+    select4:
     ;.if(al == 2)
 	cmp al, 2
-        JNE choose8
+        JNE select8
 	;.endif
-    mov edx, offset num4
+    mov edx, offset data4
 	RET
-    choose8:
+    select8:
    ;.if(al == 3)
    cmp al, 3
-        JNE choose16
+        JNE select16
 	;.endif
-    mov edx, offset num8
+    mov edx, offset data8
 	RET
-    choose16:
+    select16:
     ;.if(al == 4)
 	cmp al, 4
-        JNE choose32
+        JNE select32
 	;.endif
-    mov edx, offset num16
+    mov edx, offset data16
 	RET
-    choose32:
+    select32:
     ;.if(al == 5)
 	cmp al, 5
-        JNE choose64
+        JNE select64
 	;.endif
-    mov edx, offset num32
+    mov edx, offset data32
 	RET
-    choose64:
+    select64:
     ;.if(al == 6)
 	cmp al, 6
-        JNE choose128
+        JNE select128
 	;.endif
-    mov edx, offset num64
+    mov edx, offset data64
 	RET
-    choose128:
+    select128:
     ;.if(al == 7)
 	cmp al, 7
-        JNE choose256
+        JNE select256
 	;.endif
-    mov edx, offset num128
+    mov edx, offset data128
 	RET
-    choose256:
+    select256:
     ;.if(al == 8)
 	cmp al, 8
-        JNE choose512
+        JNE select512
 	;.endif
-    mov edx, offset num256
+    mov edx, offset data256
 	RET
-    choose512:
+    select512:
     ;.if(al == 9)
 	cmp al, 9
-        JNE choose1024
+        JNE select1024
 	;.endif
-    mov edx, offset num512
+    mov edx, offset data512
 	RET
-    choose1024:
+    select1024:
     ;.if(al == 10)
 	cmp al, 10
-        JNE choose2048
+        JNE select2048
 	;.endif
-    mov edx, offset num1024
+    mov edx, offset data1024
 	RET
-    choose2048:
+    select2048:
     ;.if(al == 11)
 	cmp al, 11
         JNE ChooseNumberReturn
 	;.endif
-    mov edx, offset num2048
+    mov edx, offset data2048
 	ChooseNumberReturn:
     RET
-choosenumber ENDP
+selectDigit ENDP
 
-Generate PROC USES EAX EBX ECX
-	redo :
+genRandom PROC USES EAX EBX ECX
+	call Randomize
+	again :
 	mov eax, 16
 	call RandomRange
 	mov ecx, eax
@@ -713,26 +713,32 @@ Generate PROC USES EAX EBX ECX
 	mov al, [ebx]
 	;.if(al == 0)
 	cmp al, 0
-		JNE redo
+		JNE again
 	;.endif
-	mov esi, offset X
+	mov esi, offset x_axis
 	add esi, ecx
-	mov edi, offset Y
+	mov edi, offset y_axis
 	add edi, ecx
 
 	mov eax, 4
 	call RandomRange
 	;.if(al == 3)
 	cmp al, 3
-		JE put4
+		JE generate4
+	cmp al, 4
+		JE generate4
 	;.endif
+	jmp generate2
+
+	generate4:
+	mov al, 2
+	mov [ebx], al
+	RET
+
+	generate2:
 	mov al, 1
 	mov [ebx], al
 	RET
 
-	put4:
-	mov al, 2
-	mov [ebx], al
-	RET
-Generate ENDP
+genRandom ENDP
 END main
