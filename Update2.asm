@@ -37,8 +37,10 @@ BYTE ' |          |           |          |          |',0ah,0dh
 BYTE ' |          |           |          |          |',0ah,0dh
 BYTE ' |          |           |          |          |',0ah,0dh
 BYTE ' |          |           |          |          |',0ah,0dh
-BYTE ' ---------------------------------------------',0ah,0dh,0
-
+BYTE " ---------------------------------------------",0ah,0dh
+BYTE '           ',0ah,0dh
+BYTE "                      CREDITS :  ",0ah,0dh
+BYTE "                                Talal Ahmed, Muhamad Maaz  :')  ",0ah,0dh,0
 
 
 winstring BYTE ' ', 0ah, 0dh
@@ -107,7 +109,6 @@ data1024 BYTE " 1024  ", 0
 data2048 BYTE " 2048  ", 0
 
 
-
 x_axis BYTE 4 DUP(2), 4 DUP(9), 4 DUP(16), 4 DUP(23)
 y_axis BYTE 4 DUP(4,15,26,37)
 
@@ -117,9 +118,12 @@ state BYTE 16 DUP(0) ; ambiguity  :'( ;
 .CODE
 main PROC
 
+	mov eax, white + 12*16
+	call selectColor
 	;generating random number
     ;CALL Randomize
     CALL Clrscr 
+	
     MOV EDX, OFFSET startscreen
     CALL WriteString
 
@@ -179,6 +183,7 @@ main PROC
 
 		call VICTORY
 		call LOSS
+
 	JMP gameProcess
 	EXIT
 
@@ -565,7 +570,8 @@ displayFunction PROC USES ESI EDI EAX EBX ECX EDX
 displayFunction ENDP
 
 assignColor PROC USES EAX
-	mov eax, white + black*16
+	mov eax, white + 12*16
+	call selectColor
 	call settextcolor
 	RET
 assignColor ENDP
@@ -590,7 +596,7 @@ selectColor PROC
 	cmp al, 3
         JNE color16
 	;.endif
-	mov eax, white + 6*16
+	mov eax, white + 13*16
     JMP setcolor
   color16:
     ;.if(al == 4)
